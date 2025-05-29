@@ -67,18 +67,20 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
         } 
 
         if (Trigger.isUpdate){
-
             // Append Stage changes in Opportunity Description
             OpportunityTriggerHandler.updateDescriptionStage(Trigger.new);
         }
+
         // Send email notifications when an Opportunity is deleted 
         if (Trigger.isDelete){
             OpportunityTriggerHandler.notifyOwnersOpportunityDeleted(Trigger.old);
         } 
+
         // Assign the primary contact to undeleted Opportunities
         if (Trigger.isUndelete){
             OpportunityTriggerHandler.setVPPrimaryContact(Trigger.newMap);
         }
+        
     }
 
     /*

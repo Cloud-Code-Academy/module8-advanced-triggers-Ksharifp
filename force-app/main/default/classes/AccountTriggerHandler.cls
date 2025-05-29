@@ -6,14 +6,22 @@ Public with sharing class AccountTriggerHandler {
         //A method to create a contact related to the account with the following default values:(after insert)
 
 
-        // Validating CRUD
-
-
+    
+    
         
     Public static void beforeInsertSetType (List<Account> newAccounts) {
         
-        //Going through new accounts without Type to set the Type field values
         
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
+
+        if (!Schema.sObjectType.Account.fields.Type.isUpdateable()) {
+            throw new System.SecurityException('You do not have access to update the Type field on Account.');
+        }    
+
+        //Going through new accounts without Type to set the Type field values
         for(Account acc: newAccounts) {
 
             if (acc.Type == null) {
@@ -24,11 +32,23 @@ Public with sharing class AccountTriggerHandler {
 
     }
 
-
+    
     Public static void beforeInsertUpdateAddressCopy (List<Account> newAccounts) {
         
-        //Going through new accounts without Type to set the Billing Address field values
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
 
+        if (!Schema.sObjectType.Account.fields.BillingStreet.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingCity.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingState.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingCountry.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingPostalCode.isUpdateable()) {
+                    throw new System.SecurityException('You do not have access to update one or more Billing Address fields on Account.');
+                }
+
+        //Going through new accounts without Type to set the Billing Address field values
         for(Account acc : newAccounts) {
 
             //if (acc.ShippingAddress != null) {
@@ -43,9 +63,20 @@ Public with sharing class AccountTriggerHandler {
         
     }
 
+    
+
 
     Public static void beforeInsertUpdateRating (List<Account> newAccounts) {
-        
+
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
+
+        if (!Schema.sObjectType.Account.fields.Rating.isUpdateable()) {
+            throw new System.SecurityException('You do not have access to update the Rating field on Account.');
+        }
+
         //Going through new accounts without Type to set the Rating field values
         for(Account acc: newAccounts) {
 
