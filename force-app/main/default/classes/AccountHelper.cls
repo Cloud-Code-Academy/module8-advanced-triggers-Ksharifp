@@ -27,8 +27,19 @@ Remember:
 Always ensure that your helper methods are bulk-safe to handle multiple records efficiently. 
 */
 public with sharing class AccountHelper {
-    
-    public static void setTypeProspect(List<Account> accsSetProspect){
+   
+
+    public static void setTypeProspect(List<Account> accsSetProspect){ 
+
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
+
+        if (!Schema.sObjectType.Account.fields.Type.isUpdateable()) {
+            throw new System.SecurityException('You do not have access to update the Type field on Account.');
+        }
+
         for (Account acc : accsSetProspect) {
             if (acc.Type == null) {
                 acc.Type = 'Prospect';
@@ -37,6 +48,21 @@ public with sharing class AccountHelper {
     }
 
     public static void addressCopy(List<Account> accsSetAddress){
+
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
+
+        if (!Schema.sObjectType.Account.fields.BillingStreet.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingCity.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingState.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingCountry.isUpdateable() ||
+                    !Schema.sObjectType.Account.fields.BillingPostalCode.isUpdateable()) {
+                    throw new System.SecurityException('You do not have access to update one or more Billing Address fields on Account.');
+                }
+
+
         for (Account acc : accsSetAddress) {
             if (acc.ShippingStreet != null) {
                 acc.BillingStreet = acc.ShippingStreet;
@@ -65,6 +91,16 @@ public with sharing class AccountHelper {
     //}
 
     public static void setRating(List<Account> accsSetRating){
+
+        //CRUD Validation
+        if (!Schema.sObjectType.Account.isUpdateable()) {
+            throw new System.SecurityException('You do not have permission to update Account records.');
+        }
+
+        if (!Schema.sObjectType.Account.fields.Rating.isUpdateable()) {
+            throw new System.SecurityException('You do not have access to update the Rating field on Account.');
+        }
+
         for (Account acc : accsSetRating) {
             if (acc.Phone != null && acc.Website != null && acc.Fax != null) {
                 acc.Rating = 'Hot';
@@ -76,6 +112,20 @@ public with sharing class AccountHelper {
     //}
 
     public static void defaultContact(List<Account> accsDefaultContact){
+
+        // Validate CRUD permissions for inserting Contact
+        if (!Schema.sObjectType.Contact.isCreateable()) {
+            throw new System.SecurityException('You do not have permission to create Contact records.');
+        }
+                
+        // Validate CRUD permission for insering Contact fields
+        if (!Schema.sObjectType.Contact.fields.LastName.isAccessible() || 
+            !Schema.sObjectType.Contact.fields.AccountId.isAccessible() ||
+            !Schema.sObjectType.Contact.fields.Email.isAccessible() ||
+            !Schema.sObjectType.Contact.fields.Id.isAccessible()) {
+            throw new System.SecurityException('You do not have access to one or more fields on Contact.');
+        }
+
         List<Contact> contacts = new List<Contact>();   
         for(Account acc : accsDefaultContact){
             Contact con = new Contact();
