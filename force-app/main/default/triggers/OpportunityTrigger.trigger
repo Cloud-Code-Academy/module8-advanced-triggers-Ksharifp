@@ -41,24 +41,26 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
 
 
 
-    if (Trigger.isBefore){
-        if (Trigger.isInsert){
-            // Set default Type for new Opportunities
-            OpportunityTriggerHandler.setDefaultType(Trigger.new);  
-        } 
+    if (Trigger.isBefore && Trigger.isInsert){
+        // Set default Type for new Opportunities
+        OpportunityTriggerHandler.setDefaultType(Trigger.new);  
+    } 
 
-        if (Trigger.isDelete){
-            // Prevent deletion of closed Opportunities
-            OpportunityTriggerHandler.dontDeleteClosedOpps(Trigger.old);
-            OpportunityTriggerHandler.preventDeleteClosedWon(Trigger.old);
-        }
-
-        if (Trigger.isUpdate) {
-            OpportunityTriggerHandler.validateAmount(Trigger.new);
-            OpportunityTriggerHandler.setCEOPrimaryContact(Trigger.new);
-        }
+    if (Trigger.isBefore && Trigger.isDelete){
+        // Prevent deletion of closed Opportunities
+        OpportunityTriggerHandler.dontDeleteClosedOpps(Trigger.old);
     }
 
+    if (Trigger.isBefore && Trigger.isUpdate) {
+        OpportunityTriggerHandler.preventUpdateWrongAmount(Trigger.new);
+        OpportunityTriggerHandler.updateDescriptionStage(Trigger.new);
+    }
+        
+            
+        
+
+        
+    
     if (Trigger.isAfter){
         if (Trigger.isInsert){
             // Create a new Task for newly inserted Opportunities
@@ -68,7 +70,8 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
 
         if (Trigger.isUpdate){
             // Append Stage changes in Opportunity Description
-            OpportunityTriggerHandler.updateDescriptionStage(Trigger.new);
+            
+            OpportunityTriggerHandler.setCEOPrimaryContact(Trigger.new);
         }
 
         // Send email notifications when an Opportunity is deleted 
@@ -76,10 +79,14 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
             OpportunityTriggerHandler.notifyOwnersOpportunityDeleted(Trigger.old);
         } 
 
-        // Assign the primary contact to undeleted Opportunities
         if (Trigger.isUndelete){
             OpportunityTriggerHandler.setVPPrimaryContact(Trigger.newMap);
         }
+
+        // Assign the primary contact to undeleted Opportunities
+        //if (Trigger.isUndelete){
+            //OpportunityHelper.setVPPrimaryContact(Trigger.newMap);
+        //}
         
     }
 

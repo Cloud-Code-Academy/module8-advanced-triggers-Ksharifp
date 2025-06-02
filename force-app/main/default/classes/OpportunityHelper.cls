@@ -1,4 +1,7 @@
 public with sharing class OpportunityHelper {
+    //when you undelete a record you are actually inserting new records. Once you undelete you need to get those records to update
+    //How to update undeleted records (trigger after undelete)
+
 
     public static void setDefaultType(List<Opportunity> opps) {
 
@@ -22,9 +25,9 @@ public with sharing class OpportunityHelper {
     public static void dontDeleteClosedOpps(List<Opportunity> opps){
 
         //CRUD Validation
-        if (!Schema.sObjectType.Opportunity.isAccessible()) {
-            throw new System.SecurityException('You do not have permission to update Opportunity records.');
-        }
+        //if (!Schema.sObjectType.Opportunity.isAccessible()) {
+            //throw new System.SecurityException('You do not have permission to update Opportunity records.');
+        //}
         
         //loop through opps to sent error message
         for (Opportunity oldOpp : opps){
@@ -37,7 +40,7 @@ public with sharing class OpportunityHelper {
     public static void createTasks(List<Opportunity> opps){
 
         //CRUD Validation
-        if (!Schema.sObjectType.Opportunity.isUpdateable()) {
+        /*if (!Schema.sObjectType.Opportunity.isUpdateable()) {
             throw new System.SecurityException('You do not have permission to update Opportunity records.');
         }
 
@@ -51,7 +54,7 @@ public with sharing class OpportunityHelper {
             !Schema.sObjectType.Task.fields.OwnerId.isUpdateable() ||
             !Schema.sObjectType.Task.fields.ActivityDate.isUpdateable()) {
             throw new System.SecurityException('You do not have access to update one or more fields on Task.');
-        }
+        }*/
 
         //List of tasks to be created
         List<Task> tasksToCreate = new List<Task>();
@@ -72,13 +75,13 @@ public with sharing class OpportunityHelper {
     public static void updateDescriptionStage (List<Opportunity> opps){
 
         //CRUD Validation
-        if (!Schema.sObjectType.Opportunity.isUpdateable()) {
+        /*if (!Schema.sObjectType.Opportunity.isUpdateable()) {
             throw new System.SecurityException('You do not have permission to update Opportunity records.');
         }
 
         if (!Schema.sObjectType.Opportunity.fields.Description.isUpdateable()){
             throw new System.SecurityException('You do not have permission to update the Description field Opportunity records.');
-        }
+        }*/
 
         //List of Opps to be updated
         List<Opportunity> oppsToUpdate = new List<Opportunity>();
@@ -96,7 +99,7 @@ public with sharing class OpportunityHelper {
 
     public static void notifyOwnersOpportunityDeleted(List<Opportunity> opps) {
 
-        //CRUD Validation
+        /*//CRUD Validation
         if (!Schema.sObjectType.Opportunity.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Opportunity records.');
         }
@@ -108,7 +111,7 @@ public with sharing class OpportunityHelper {
         }
         if (!Schema.sObjectType.User.fields.Email.isAccessible()) {
             throw new System.SecurityException('You do not have access to the Email field on User.');
-        }
+        }*/
 
 
         //List of mails to be sent
@@ -140,7 +143,7 @@ public with sharing class OpportunityHelper {
     public static void assignPrimaryContact(Map<Id,Opportunity> oppNewMap) {        
 
         //CRUD Validation
-        if (!Schema.sObjectType.Opportunity.isAccessible()) {
+        /*if (!Schema.sObjectType.Opportunity.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Opportunity records.');
         }
 
@@ -166,7 +169,7 @@ public with sharing class OpportunityHelper {
 
         if (!Schema.sObjectType.Contact.fields.Id.isAccessible()) {
             throw new System.SecurityException('You do not have access to the Id field on Contact.');
-        }
+        }*/
 
 
 
