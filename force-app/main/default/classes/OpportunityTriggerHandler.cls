@@ -92,24 +92,40 @@ public with sharing class OpportunityTriggerHandler {
     }
 
     //After Update
+    /**
+     * Updates the Description field of Opportunities with the stage change.
+     * If the StageName is not null and the Description is null, appends the stage change
+     * information along with the current timestamp to the Description field.
+     */
     public static void updateDescriptionStage (List<Opportunity> opps){
          //CRUD Validation
         if (!Schema.sObjectType.Opportunity.isUpdateable()) {
             throw new System.SecurityException('You do not have permission to update Opportunity records.');
         }
 
+        if (!Schema.sObjectType.Opportunity.fields.StageName.isAccessible()){
+            throw new System.SecurityException('You do not have permission to update the Description field Opportunity records.');
+        }
+
         if (!Schema.sObjectType.Opportunity.fields.Description.isUpdateable()){
             throw new System.SecurityException('You do not have permission to update the Description field Opportunity records.');
         }
 
-        List<Opportunity> oppsToUpdate = new List<Opportunity>();
-        for (Opportunity opp : opps){
-                if (opp.StageName != null) {
-                    opp.Description += '\n Stage Change:' + Opp.StageName + ':' + Datetime.now().format();
-                    oppsToUpdate.add(opp);
-                }
+        Set<Id> oppIds = new Set<Id>();
+        if (!opps.isEmpty()) {
+            for (Opportunity opp : opps) {
+            oppIds.add(opp.Id);
             }
-        update oppsToUpdate;
+        }
+        
+        List<Opportunity> oppsToUpdate = [SELECT Id, StageName, Description FROM Opportunity WHERE Id IN :oppIds];
+        if (!oppsToUpdate.isEmpty()) {
+            for (Opportunity oppo : oppsToUpdate){
+                if (oppo.StageName != null) {
+                    oppo.Description = (oppo.Description == null ? '' : oppo.Description) +'\n Stage Change:' + oppo.StageName + ':' + Datetime.now().format();
+                } 
+            } 
+        }
     }
     
     //After Update
