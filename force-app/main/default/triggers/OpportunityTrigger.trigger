@@ -47,7 +47,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
     } 
     
     if (Trigger.isBefore && Trigger.isUpdate) {
-        OpportunityTriggerHandler.updateDescriptionStage(Trigger.new);
+        OpportunityTriggerHandler.updateDescriptionStage(Trigger.new, Trigger.oldMap);
         OpportunityTriggerHandler.preventUpdateWrongAmount(Trigger.new);
     }    
 
@@ -57,12 +57,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
     }
 
     
-    
-        
-            
-        
 
-        
     
     if (Trigger.isAfter){
         if (Trigger.isInsert){
@@ -71,10 +66,10 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
             OpportunityTriggerHandler.createTasks(Trigger.new);
         } 
 
-        if (Trigger.isUpdate){
+        //if (Trigger.isUpdate){
             // Append Stage changes in Opportunity Description
-            OpportunityTriggerHandler.preventUpdateWrongAmount(Trigger.new);
-        }
+            
+        //}
 
         // Send email notifications when an Opportunity is deleted 
         if (Trigger.isDelete){

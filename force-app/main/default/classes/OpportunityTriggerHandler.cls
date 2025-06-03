@@ -91,13 +91,13 @@ public with sharing class OpportunityTriggerHandler {
             insert tasksToCreate;
     }
 
-    //After Update
+    //After Update --> changed to before update
     /**
      * Updates the Description field of Opportunities with the stage change.
      * If the StageName is not null and the Description is null, appends the stage change
      * information along with the current timestamp to the Description field.
      */
-    public static void updateDescriptionStage (List<Opportunity> opps){
+    public static void updateDescriptionStage (List<Opportunity> opps, Map<Id, Opportunity> oldMap){
          //CRUD Validation
         if (!Schema.sObjectType.Opportunity.isUpdateable()) {
             throw new System.SecurityException('You do not have permission to update Opportunity records.');
@@ -111,21 +111,12 @@ public with sharing class OpportunityTriggerHandler {
             throw new System.SecurityException('You do not have permission to update the Description field Opportunity records.');
         }
 
-        Set<Id> oppIds = new Set<Id>();
-        if (!opps.isEmpty()) {
-            for (Opportunity opp : opps) {
-            oppIds.add(opp.Id);
-            }
-        }
-        
-        List<Opportunity> oppsToUpdate = [SELECT Id, StageName, Description FROM Opportunity WHERE Id IN :oppIds];
-        if (!oppsToUpdate.isEmpty()) {
-            for (Opportunity oppo : oppsToUpdate){
-                if (oppo.StageName != null) {
-                    oppo.Description = (oppo.Description == null ? '' : oppo.Description) +'\n Stage Change:' + oppo.StageName + ':' + Datetime.now().format();
-                } 
+        for (Opportunity opp : opps){
+            Opportunity oldOpp = oldMap.get(opp.Id);
+            if (opp.StageName != null && oldOpp != null && opp.StageName != oldOpp.StageName) {
+                opp.Description = (opp.Description == null ? '' : opp.Description) +'\n Stage Change:' + opp.StageName + ':' + Datetime.now().format();
             } 
-        }
+        } 
     }
     
     //After Update
@@ -203,6 +194,7 @@ public with sharing class OpportunityTriggerHandler {
         List<Messaging.SingleEmailMessage> mails = new List<Messaging.SingleEmailMessage>();
         //created a set of owner Ids from the opps collection (the dot notation at the end of the soql was a cool trick)
         Set<Id> ownerIds = new Set<Id> {[SELECT OwnerId FROM Opportunity WHERE Id = :opps].OwnerId};
+        System.debug(ownerIds);
         //created a string of emails using the set of Ids
         String[] toAddresses = new String[] {[SELECT Id, Email FROM User WHERE Id = :ownerIds].Email};
         for (Opportunity opp : opps){
