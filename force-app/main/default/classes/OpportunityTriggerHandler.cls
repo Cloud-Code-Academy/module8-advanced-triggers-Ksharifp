@@ -45,12 +45,19 @@ public with sharing class OpportunityTriggerHandler {
             throw new System.SecurityException('You do not have permission to update Opportunity records.');
         }
 
-        Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Industry FROM Account WHERE Id IN (SELECT AccountId FROM Opportunity WHERE Id IN :opps)]);
-        for(Opportunity opp : opps){
-            if(opp.StageName == 'Closed Won'){
-                if(accounts.get(opp.AccountId).Industry == 'Banking'){
-                    opp.addError('Cannot delete a closed won opportunity for a banking account');
-                }
+        //created a map to connect the opp id and the account industry
+        Map<Id, String> oppIdAccIndustry = new Map<Id, String>();
+        for (Opportunity opp : opps) {
+            oppIdAccIndustry.put(opp.Id, opp.Account.Industry);
+        }
+
+        //go through deleted opps to check account industry
+        for (Opportunity opp : opps){
+            
+            if(opp.StageName == 'Closed Won' && oppIdAccIndustry.get(opp.Id) == 'Banking'){
+                opp.addError('Cannot delete closed opportunity');
+            } else if (opp.StageName == 'Closed Won' || opp.StageName == 'Closed Lost') {
+                opp.addError('Cannot delete closed opportunity');
             }
         }
     }
@@ -155,20 +162,20 @@ public with sharing class OpportunityTriggerHandler {
         for(Opportunity opp : opps){
             accountIds.add(opp.AccountId);
         }
-        
-        Map<Id, Contact> contacts = new Map<Id, Contact>([SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC]);
-        Map<Id, Contact> accountIdToContact = new Map<Id, Contact>();
+        System.debug(accountIds);
+        List<Contact> ceoContacts = [SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC];
+        Map<Id, Id> accountIdToContact = new Map<Id, Id>();
 
-        for (Contact cont : contacts.values()) {
-            if (!accountIdToContact.containsKey(cont.AccountId)) {
-                accountIdToContact.put(cont.AccountId, cont);
+        if (!ceoContacts.isEmpty()) {
+            for (Contact con : ceoContacts) {
+                accountIdToContact.put(con.AccountId, con.Id);
             }
         }
-
+        System.debug(accountIdToContact);
         for(Opportunity opp : opps){
             if(opp.Primary_Contact__c == null){
                 if (accountIdToContact.containsKey(opp.AccountId)){
-                    opp.Primary_Contact__c = accountIdToContact.get(opp.AccountId).Id;
+                    opp.Primary_Contact__c = accountIdToContact.get(opp.AccountId);
                 }
             }
         }
@@ -193,17 +200,23 @@ public with sharing class OpportunityTriggerHandler {
 
         List<Messaging.SingleEmailMessage> mails = new List<Messaging.SingleEmailMessage>();
         //created a set of owner Ids from the opps collection (the dot notation at the end of the soql was a cool trick)
-        Set<Id> ownerIds = new Set<Id> {[SELECT OwnerId FROM Opportunity WHERE Id = :opps].OwnerId};
-        System.debug(ownerIds);
+        Set<Id> ownerIds = new Set<Id>();
+        for (Opportunity opp : opps) {
+            ownerIds.add(opp.OwnerId);
+        }
+
         //created a string of emails using the set of Ids
         String[] toAddresses = new String[] {[SELECT Id, Email FROM User WHERE Id = :ownerIds].Email};
-        for (Opportunity opp : opps){
+        if (!toAddresses.isEmpty()) {
+            for (Opportunity opp : opps){
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(toAddresses);
             mail.setSubject('Opportunity Deleted : ' + opp.Name);
             mail.setPlainTextBody('Your Opportunity: ' + opp.Name +' has been deleted.');
             mails.add(mail);
-        }        
+            }   
+        }
+             
         
         try {
             Messaging.sendEmail(mails);
@@ -213,7 +226,7 @@ public with sharing class OpportunityTriggerHandler {
     }
 
     //After Undelete Set VPSales as Primary Contact
-    public static void setVPPrimaryContact(Map<Id,Opportunity> oppNewMap) {
+    public static void setVPPrimaryContact(List<Opportunity> opps, Map<Id,Opportunity> oppOldMap) {
         
         //CRUD Validation
         if (!Schema.sObjectType.Opportunity.isAccessible()) {
@@ -244,46 +257,54 @@ public with sharing class OpportunityTriggerHandler {
             throw new System.SecurityException('You do not have access to the Id field on Contact.');
         }
 
-        
+        //map of opps to be updated
         Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>();
-        Set<Id> accIds = new Set<Id> {[SELECT AccountId FROM Opportunity WHERE Id = :oppNewMap.keySet()].AccountId};
-        List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
-        Map<Id,Id> accIdContactId = new Map<Id,Id>();
 
+        //set of account Ids to be used in getting the primary contact
+        Set<Id> accIds = new Set<Id>();
+        for (Opportunity opp : opps) {
+            accIds.add(opp.AccountId);
+        }
+
+        //list of contacts with the title of VP Sales to be associated with Account Id
+        List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
+        
+        //map of the account Id and VPSalesContact Id to be used in updating the opportunity
+        Map<Id,Id> accIdContactId = new Map<Id,Id>();
         for (Contact con : vpSalesContacts){
             accIdContactId.put(con.AccountId, con.Id);
         }
 
-        for (Opportunity opp : oppNewMap.values()){            
-        
-            if (opp.Primary_Contact__c == null){
-                Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
-                oppToUpdate.Primary_Contact__c = accIdContactId.get(opp.AccountId);
-                oppMap.put(opp.Id, oppToUpdate);
-            }
-        }
-        update oppMap.values();
-    }
-
-    public static void validateAmount(List<Opportunity> opps){
-        for(Opportunity opp : opps){
-            if(opp.Amount < 5000){
-                opp.addError('Opportunity amount must be greater than 5000');
-            }
-        }
-    }
-
-    public static void preventDeleteClosedWon(List<Opportunity> opps){
-        //Account related to the opportunities 
-        Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Industry FROM Account WHERE Id IN (SELECT AccountId FROM Opportunity WHERE Id IN :opps)]);
-        for(Opportunity opp : opps){
-            if(opp.StageName == 'Closed Won'){
-                if(accounts.get(opp.AccountId).Industry == 'Banking'){
-                    opp.addError('Cannot delete a closed won opportunity for a banking account');
+        //going through newly updated records, 
+        for (Opportunity opp : opps){
+            Opportunity oldOpp = oppOldMap.get(opp.Id);
+            if (opp.AccountId != null && opp.IsDeleted == FALSE && oldOpp != null && oldOpp.IsDeleted == TRUE) {
+                if (opp.Primary_Contact__c == null){
+                    Id vpContactId = accIdContactId.get(opp.AccountId);
+                    if (vpContactId != null) {
+                        Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
+                        oppToUpdate.Primary_Contact__c = accIdContactId.get(opp.AccountId);
+                        oppMap.put(opp.Id, oppToUpdate);
+                    }
                 }
-            }
+            } 
+        } 
+        if (!oppMap.isEmpty()) {
+            update oppMap.values();
         }
     }
+
+    
+
+    //public static void validateAmount(List<Opportunity> opps){
+        //for(Opportunity opp : opps){
+           // if(opp.Amount < 5000){
+             //   opp.addError('Opportunity amount must be greater than 5000');
+           // }
+        //}
+    //}
+
+ 
 
 
 
