@@ -50,7 +50,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
         OpportunityTriggerHandler.updateDescriptionStage(Trigger.new, Trigger.oldMap);
         OpportunityTriggerHandler.preventUpdateWrongAmount(Trigger.new);
         OpportunityTriggerHandler.setCEOPrimaryContact(Trigger.new);
-        OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new, Trigger.oldMap);
+        
     }    
 
     if (Trigger.isBefore && Trigger.isDelete){
@@ -59,6 +59,9 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
         OpportunityTriggerHandler.dontDeleteClosedOpps(Trigger.old);
     }
 
+    if (Trigger.isBefore && Trigger.isUndelete) {
+        //OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new, Trigger.oldMap);
+    }
     
 
     
@@ -69,24 +72,21 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
             OpportunityTriggerHandler.createTasks(Trigger.new);
         } 
 
-        if (Trigger.isUpdate){
+        //if (Trigger.isUpdate){
             // Append Stage changes in Opportunity Description
-            OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new, Trigger.oldMap);
-        }
+            
+        //}
 
         // Send email notifications when an Opportunity is deleted 
         if (Trigger.isDelete){
             OpportunityTriggerHandler.notifyOwnersOpportunityDeleted(Trigger.old);
         } 
 
-        //if (Trigger.isUndelete){
-            //OpportunityTriggerHandler.setVPPrimaryContact(Trigger.newMap);
-        //}
 
         // Assign the primary contact to undeleted Opportunities
-        //if (Trigger.isUndelete){
-            //OpportunityHelper.setVPPrimaryContact(Trigger.newMap);
-        //}
+        if (Trigger.isUndelete){
+            OpportunityHelper.setVPPrimaryContact(Trigger.newMap);
+        }
         
     }
 

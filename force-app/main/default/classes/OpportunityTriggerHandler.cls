@@ -263,7 +263,9 @@ public with sharing class OpportunityTriggerHandler {
         //set of account Ids to be used in getting the primary contact
         Set<Id> accIds = new Set<Id>();
         for (Opportunity opp : opps) {
-            accIds.add(opp.AccountId);
+            if (opp.AccountId != null) {
+                accIds.add(opp.AccountId);
+            }
         }
 
         //list of contacts with the title of VP Sales to be associated with Account Id
@@ -272,23 +274,34 @@ public with sharing class OpportunityTriggerHandler {
         //map of the account Id and VPSalesContact Id to be used in updating the opportunity
         Map<Id,Id> accIdContactId = new Map<Id,Id>();
         for (Contact con : vpSalesContacts){
-            accIdContactId.put(con.AccountId, con.Id);
+            if (con.AccountId != null) {
+                accIdContactId.put(con.AccountId, con.Id);
+            }           
         }
 
         //going through newly updated records, 
         for (Opportunity opp : opps){
-            Opportunity oldOpp = oppOldMap.get(opp.Id);
-            if (opp.AccountId != null && opp.IsDeleted == FALSE && oldOpp != null && oldOpp.IsDeleted == TRUE) {
-                if (opp.Primary_Contact__c == null){
-                    Id vpContactId = accIdContactId.get(opp.AccountId);
-                    if (vpContactId != null) {
-                        Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
-                        oppToUpdate.Primary_Contact__c = accIdContactId.get(opp.AccountId);
-                        oppMap.put(opp.Id, oppToUpdate);
+            if (opp.AccountId == null) continue;
+            
+            if (oppOldMap != null && oppOldMap.keySet().contains(opp.Id)) {
+                Opportunity oldOpp = oppOldMap.get(opp.Id);
+                if (oldOpp != null) {
+                    if ( opp.IsDeleted == FALSE && oldOpp.IsDeleted == TRUE) {
+                        if (opp.Primary_Contact__c == null){
+                            Id vpContactId = accIdContactId.get(opp.AccountId);
+                            if (vpContactId != null) {
+                                //In case this method must have been used in an After Undelete context
+                                Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
+                                oppToUpdate.Primary_Contact__c = vpContactId;
+                                //In case this method must have been used in an After Undelete context
+                                oppMap.put(opp.Id, oppToUpdate);
+                            }
+                        }
                     }
-                }
+                } 
             } 
         } 
+        // In case it is required to use this method in After Undelete
         if (!oppMap.isEmpty()) {
             update oppMap.values();
         }
