@@ -140,7 +140,7 @@ public with sharing class OpportunityHelper {
     }
 
 
-    public static void assignPrimaryContact(Map<Id,Opportunity> oppNewMap) {        
+    //public static void assignPrimaryContact(Map<Id,Opportunity> oppNewMap) {        
 
         //CRUD Validation
         /*if (!Schema.sObjectType.Opportunity.isAccessible()) {
@@ -174,32 +174,32 @@ public with sharing class OpportunityHelper {
 
 
         //Map of Opp Id and record to be used in setting the contact Id
-        Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>();
+        //Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>();
 
         //Set of Account Ids to be used in getting the Id of the primary contact
-        Set<Id> accIds = new Set<Id> {[SELECT AccountId FROM Opportunity WHERE Id = :oppNewMap.keySet()].AccountId};
+        //Set<Id> accIds = new Set<Id> {[SELECT AccountId FROM Opportunity WHERE Id = :oppNewMap.keySet()].AccountId};
 
         //List of contacts with title VP of sales with Ids and Account Ids
-        List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
+        //List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
         
         //Map of Account Id and Primary Contact Id to be used in setting the Primary contact Id on Oppo
-        Map<Id,Id> accIdContactId = new Map<Id,Id>();
+        //Map<Id,Id> accIdContactId = new Map<Id,Id>();
         
         //loop through the contacts to create the map of Account Id, Contact Id
-        for (Contact con : vpSalesContacts){
-            accIdContactId.put(con.AccountId, con.Id);
-        }
+        //for (Contact con : vpSalesContacts){
+           //accIdContactId.put(con.AccountId, con.Id);
+        //}
 
         //loop through opps to set the primary contact Id using the Account Id, Contact Id map
-        for (Opportunity opp : oppNewMap.values()){            
+        //for (Opportunity opp : oppNewMap.values()){            
             
-            if (opp.Primary_Contact__c == null){
-                Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
-                oppToUpdate.Primary_Contact__c = accIdContactId.get(opp.AccountId);
-                oppMap.put(opp.Id, oppToUpdate);
-            }
-        }
-        update oppMap.values();
-    }
+            //if (opp.Primary_Contact__c == null){
+                //Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
+                //oppToUpdate.Primary_Contact__c = accIdContactId.get(opp.AccountId);
+                //oppMap.put(opp.Id, oppToUpdate);
+            //}
+        //}
+        //update oppMap.values();
+    //}
 
 }
