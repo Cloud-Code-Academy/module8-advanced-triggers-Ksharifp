@@ -238,7 +238,7 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         if (!Schema.sObjectType.Opportunity.fields.Primary_Contact__c.isUpdateable()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Opportunity.');
+            throw new System.SecurityException('You do not have access to the Primary Contact field on Opportunity.');
         }
         
         if (!Schema.sObjectType.Account.isAccessible()) {
@@ -246,7 +246,7 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Account.');
+            throw new System.SecurityException('You do not have access to the Primary Contact field on Account.');
         }
 
         if (!Schema.sObjectType.Contact.isAccessible()) {
