@@ -206,22 +206,16 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         //created a string of emails using the set of Ids
-        Set<String> toAddresses = new Set<String>();
-        List<User> ownerUsers = new List<User>([SELECT Id, Email FROM User WHERE Id IN :ownerIds]);
-        for (User u : ownerUsers) {
-            if (!ownerUsers.isEmpty() && u.Email != null) {
-                toAddresses.add(u.Email);
-            }
-        }
-
+        String[] toAddresses = new String[] {[SELECT Id, Email FROM User WHERE Id = :ownerIds].Email};
         if (!toAddresses.isEmpty()) {
+            for (Opportunity opp : opps){
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(new List<String>(toAddresses));
-            mail.setSubject('Opportunity Deleted');
-            mail.setPlainTextBody('Your Opportunity has been deleted.');
+            mail.setToAddresses(toAddresses);
+            mail.setSubject('Opportunity Deleted : ' + opp.Name);
+            mail.setPlainTextBody('Your Opportunity: ' + opp.Name +' has been deleted.');
             mails.add(mail);
             }   
-        
+        }
              
         
         try {
@@ -232,8 +226,8 @@ public with sharing class OpportunityTriggerHandler {
     }
 
     //After Undelete Set VPSales as Primary Contact
-    public static void setVPPrimaryContact(List<Opportunity> opps) {
-        // the old records of undelete do not exist
+    public static void setVPPrimaryContact(List<Opportunity> opps, Map<Id,Opportunity> oppOldMap) {
+        
         //CRUD Validation
         if (!Schema.sObjectType.Opportunity.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Opportunity records.');
@@ -273,10 +267,10 @@ public with sharing class OpportunityTriggerHandler {
                 accIds.add(opp.AccountId);
             }
         }
-        System.debug(accIds);
+
         //list of contacts with the title of VP Sales to be associated with Account Id
         List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
-        System.debug(vpSalesContacts);
+        
         //map of the account Id and VPSalesContact Id to be used in updating the opportunity
         Map<Id,Id> accIdContactId = new Map<Id,Id>();
         for (Contact con : vpSalesContacts){
@@ -284,34 +278,33 @@ public with sharing class OpportunityTriggerHandler {
                 accIdContactId.put(con.AccountId, con.Id);
             }           
         }
-        System.debug(accIdContactId);
+
         //going through newly updated records, 
         for (Opportunity opp : opps){
             if (opp.AccountId == null) continue;
             
-            //if (oppOldMap != null && oppOldMap.keySet().contains(opp.Id)) {
-                //Opportunity oldOpp = oppOldMap.get(opp.Id);
-                //if (oldOpp != null) {
-                    //if ( opp.IsDeleted == FALSE && oldOpp.IsDeleted == TRUE) {
-            if (opp.Primary_Contact__c == null){
-                Id vpContactId = accIdContactId.get(opp.AccountId);
-                if (vpContactId != null) {
-                    //In case this method must have been used in an After Undelete context
-                    Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
-                    oppToUpdate.Primary_Contact__c = vpContactId;
-                    //In case this method must have been used in an After Undelete context
-                    oppMap.put(opp.Id, oppToUpdate);
-                }
-            }
-                    //}
-                //} 
-            //} 
+            if (oppOldMap != null && oppOldMap.keySet().contains(opp.Id)) {
+                Opportunity oldOpp = oppOldMap.get(opp.Id);
+                if (oldOpp != null) {
+                    if ( opp.IsDeleted == FALSE && oldOpp.IsDeleted == TRUE) {
+                        if (opp.Primary_Contact__c == null){
+                            Id vpContactId = accIdContactId.get(opp.AccountId);
+                            if (vpContactId != null) {
+                                //In case this method must have been used in an After Undelete context
+                                Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
+                                oppToUpdate.Primary_Contact__c = vpContactId;
+                                //In case this method must have been used in an After Undelete context
+                                oppMap.put(opp.Id, oppToUpdate);
+                            }
+                        }
+                    }
+                } 
+            } 
         } 
         // In case it is required to use this method in After Undelete
         if (!oppMap.isEmpty()) {
             update oppMap.values();
         }
-        System.debug(oppMap);
     }
 
     

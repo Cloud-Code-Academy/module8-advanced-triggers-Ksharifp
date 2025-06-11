@@ -60,7 +60,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
     }
 
     if (Trigger.isBefore && Trigger.isUndelete) {
-       
+        //OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new, Trigger.oldMap);
     }
     
 
@@ -85,7 +85,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
 
         // Assign the primary contact to undeleted Opportunities
         if (Trigger.isUndelete){
-            OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new);
+            OpportunityHelper.setVPPrimaryContact(Trigger.newMap);
         }
         
     }
