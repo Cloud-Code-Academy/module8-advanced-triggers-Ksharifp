@@ -13,7 +13,7 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         for (Opportunity opp : opps){
-            if (opp.Type == null) {
+            if (opp.Type == null){
                 opp.Type = 'New Customer'; 
             }
         }
@@ -162,7 +162,7 @@ public with sharing class OpportunityTriggerHandler {
         for(Opportunity opp : opps){
             accountIds.add(opp.AccountId);
         }
-        
+        System.debug(accountIds);
         List<Contact> ceoContacts = [SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC];
         Map<Id, Id> accountIdToContact = new Map<Id, Id>();
 
@@ -171,7 +171,7 @@ public with sharing class OpportunityTriggerHandler {
                 accountIdToContact.put(con.AccountId, con.Id);
             }
         }
-        
+        System.debug(accountIdToContact);
         for(Opportunity opp : opps){
             if(opp.Primary_Contact__c == null){
                 if (accountIdToContact.containsKey(opp.AccountId)){
@@ -220,7 +220,9 @@ public with sharing class OpportunityTriggerHandler {
             mail.setSubject('Opportunity Deleted');
             mail.setPlainTextBody('Your Opportunity has been deleted.');
             mails.add(mail);
-        }   
+            }   
+        
+             
         
         try {
             Messaging.sendEmail(mails);
@@ -271,10 +273,10 @@ public with sharing class OpportunityTriggerHandler {
                 accIds.add(opp.AccountId);
             }
         }
-        
+        System.debug(accIds);
         //list of contacts with the title of VP Sales to be associated with Account Id
         List<Contact> vpSalesContacts = [SELECT Id, AccountId, Title FROM Contact WHERE Title = 'VP Sales' AND AccountId = :accIds];
-        
+        System.debug(vpSalesContacts);
         //map of the account Id and VPSalesContact Id to be used in updating the opportunity
         Map<Id,Id> accIdContactId = new Map<Id,Id>();
         for (Contact con : vpSalesContacts){
@@ -282,12 +284,10 @@ public with sharing class OpportunityTriggerHandler {
                 accIdContactId.put(con.AccountId, con.Id);
             }           
         }
-        
+        System.debug(accIdContactId);
         //going through newly updated records, 
         for (Opportunity opp : opps){
-            if (opp.AccountId == null) {
-                continue;
-            } 
+            if (opp.AccountId == null) continue;
             
             //if (oppOldMap != null && oppOldMap.keySet().contains(opp.Id)) {
                 //Opportunity oldOpp = oppOldMap.get(opp.Id);
@@ -311,7 +311,7 @@ public with sharing class OpportunityTriggerHandler {
         if (!oppMap.isEmpty()) {
             update oppMap.values();
         }
-        
+        System.debug(oppMap);
     }
 
     
