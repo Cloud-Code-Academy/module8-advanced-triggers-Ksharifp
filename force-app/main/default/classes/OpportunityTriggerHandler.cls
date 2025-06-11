@@ -139,7 +139,7 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         if (!Schema.sObjectType.Opportunity.fields.Primary_Contact__c.isUpdateable()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Opportunity.');
+            throw new System.SecurityException('You do not have access to the Primary Contact field on Opportunity.');
         }
         
         if (!Schema.sObjectType.Account.isAccessible()) {
@@ -147,7 +147,7 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Account.');
+            throw new System.SecurityException('You do not have access to the Primary Contact field on Account.');
         }
 
         if (!Schema.sObjectType.Contact.isAccessible()) {
@@ -226,7 +226,7 @@ public with sharing class OpportunityTriggerHandler {
     }
 
     //After Undelete Set VPSales as Primary Contact
-    public static void setVPPrimaryContact(List<Opportunity> opps, Map<Id,Opportunity> oppOldMap) {
+    public static void setVPPrimaryContact(List<Opportunity> opps) {
         
         //CRUD Validation
         if (!Schema.sObjectType.Opportunity.isAccessible()) {
@@ -281,30 +281,23 @@ public with sharing class OpportunityTriggerHandler {
 
         //going through newly updated records, 
         for (Opportunity opp : opps){
-            if (opp.AccountId == null) continue;
+            if (opp.AccountId == null) {
+                continue;
+            }
             
-            if (oppOldMap != null && oppOldMap.keySet().contains(opp.Id)) {
-                Opportunity oldOpp = oppOldMap.get(opp.Id);
-                if (oldOpp != null) {
-                    if ( opp.IsDeleted == FALSE && oldOpp.IsDeleted == TRUE) {
-                        if (opp.Primary_Contact__c == null){
-                            Id vpContactId = accIdContactId.get(opp.AccountId);
-                            if (vpContactId != null) {
-                                //In case this method must have been used in an After Undelete context
-                                Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
-                                oppToUpdate.Primary_Contact__c = vpContactId;
-                                //In case this method must have been used in an After Undelete context
-                                oppMap.put(opp.Id, oppToUpdate);
-                            }
-                        }
-                    }
-                } 
-            } 
+            if (opp.Primary_Contact__c == null){
+                Id vpContactId = accIdContactId.get(opp.AccountId);
+                if (vpContactId != null) {
+                    //In case this method must have been used in an After Undelete context
+                    Opportunity oppToUpdate = new Opportunity(Id = opp.Id);
+                    oppToUpdate.Primary_Contact__c = vpContactId;
+                    //In case this method must have been used in an After Undelete context
+                    oppMap.put(opp.Id, oppToUpdate);
+                }
+            }
         } 
-        // In case it is required to use this method in After Undelete
-        if (!oppMap.isEmpty()) {
-            update oppMap.values();
-        }
+        //update the undeleted opps missing primary contact
+        update oppMap.values();
     }
 
     

@@ -35,11 +35,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
     * Trigger should only fire on update.
     */
   
-
-
     //--------------------------------
-
-
 
     if (Trigger.isBefore && Trigger.isInsert){
         // Set default Type for new Opportunities
@@ -85,7 +81,7 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
 
         // Assign the primary contact to undeleted Opportunities
         if (Trigger.isUndelete){
-            OpportunityHelper.setVPPrimaryContact(Trigger.newMap);
+            OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new);
         }
         
     }
