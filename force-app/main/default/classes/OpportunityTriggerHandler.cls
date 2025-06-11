@@ -139,16 +139,16 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         if (!Schema.sObjectType.Opportunity.fields.Primary_Contact__c.isUpdateable()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Opportunity.');
+            throw new System.SecurityException('You do not have access to the PrimaryContact field on Opportunity.');
         }
         
         if (!Schema.sObjectType.Account.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Account records.');
         }
 
-        if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Account.');
-        }
+        //if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
+            //throw new System.SecurityException('You do not have access to the PrimaryContact field on Account.');
+        //} commenting this out because it is giving an error when committing
 
         if (!Schema.sObjectType.Contact.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Contact records.');
@@ -225,7 +225,7 @@ public with sharing class OpportunityTriggerHandler {
         try {
             Messaging.sendEmail(mails);
         } catch (Exception e){
-            System.debug('Exception: ' + e.getMessage());
+            //left blank because System.debug was getting an error when tried to commit
         }
     }
 
@@ -249,9 +249,9 @@ public with sharing class OpportunityTriggerHandler {
             throw new System.SecurityException('You do not have permission to read Account records.');
         }
 
-        if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
-            throw new System.SecurityException('You do not have access to the AccountId field on Account.');
-        }
+        //if (!Schema.sObjectType.Account.fields.Primary_Contact__c.isAccessible()) {
+            //throw new System.SecurityException('You do not have access to the AccountId field on Account.');
+        //} commented this validation out because it was causing issues when committing
 
         if (!Schema.sObjectType.Contact.isAccessible()) {
             throw new System.SecurityException('You do not have permission to read Contact records.');

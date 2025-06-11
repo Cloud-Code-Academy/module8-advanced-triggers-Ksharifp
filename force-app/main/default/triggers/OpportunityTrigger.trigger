@@ -39,8 +39,6 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
 
     //--------------------------------
 
-
-
     if (Trigger.isBefore && Trigger.isInsert){
         // Set default Type for new Opportunities
         OpportunityTriggerHandler.setDefaultType(Trigger.new);  
@@ -50,32 +48,19 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
         OpportunityTriggerHandler.updateDescriptionStage(Trigger.new, Trigger.oldMap);
         OpportunityTriggerHandler.preventUpdateWrongAmount(Trigger.new);
         OpportunityTriggerHandler.setCEOPrimaryContact(Trigger.new);
-        
     }    
 
     if (Trigger.isBefore && Trigger.isDelete){
-        // Prevent deletion of closed Opportunities
-        //OpportunityTriggerHandler.preventDeleteClosedWon(Trigger.old);
+        //Prevent deletion of closed Opportunities
         OpportunityTriggerHandler.dontDeleteClosedOpps(Trigger.old);
     }
-
-    //if (Trigger.isBefore && Trigger.isUndelete) {
-       
-    //}
-    
-
     
     if (Trigger.isAfter){
         if (Trigger.isInsert){
             // Create a new Task for newly inserted Opportunities
             // created a new list to bulkify the creation of the tasks
             OpportunityTriggerHandler.createTasks(Trigger.new);
-        } 
-
-        //if (Trigger.isUpdate){
-            // Append Stage changes in Opportunity Description
-            
-        //}
+        }
 
         // Send email notifications when an Opportunity is deleted 
         if (Trigger.isDelete){
