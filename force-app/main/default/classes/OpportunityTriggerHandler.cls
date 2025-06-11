@@ -162,7 +162,7 @@ public with sharing class OpportunityTriggerHandler {
         for(Opportunity opp : opps){
             accountIds.add(opp.AccountId);
         }
-        System.debug(accountIds);
+        
         List<Contact> ceoContacts = [SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC];
         Map<Id, Id> accountIdToContact = new Map<Id, Id>();
 
@@ -171,7 +171,7 @@ public with sharing class OpportunityTriggerHandler {
                 accountIdToContact.put(con.AccountId, con.Id);
             }
         }
-        System.debug(accountIdToContact);
+        
         for(Opportunity opp : opps){
             if(opp.Primary_Contact__c == null){
                 if (accountIdToContact.containsKey(opp.AccountId)){
@@ -217,11 +217,10 @@ public with sharing class OpportunityTriggerHandler {
             }   
         }
              
-        
         try {
             Messaging.sendEmail(mails);
         } catch (Exception e){
-            System.debug('Exception: ' + e.getMessage());
+            //left blank to avoid system.debug
         }
     }
 

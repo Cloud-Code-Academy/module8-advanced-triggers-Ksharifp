@@ -55,9 +55,9 @@ trigger OpportunityTrigger on Opportunity (before insert, after insert, before u
         OpportunityTriggerHandler.dontDeleteClosedOpps(Trigger.old);
     }
 
-    if (Trigger.isBefore && Trigger.isUndelete) {
+    //if (Trigger.isBefore && Trigger.isUndelete) {
         //OpportunityTriggerHandler.setVPPrimaryContact(Trigger.new, Trigger.oldMap);
-    }
+    //}
     
 
     
